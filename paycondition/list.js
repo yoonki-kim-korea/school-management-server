@@ -1,0 +1,240 @@
+const Log = require('../utils/debug.js');
+
+/**
+ * 수업료 납부현황
+ */
+payconditionList = (req, res, connection) => { 
+    
+    let sql = `
+ SELECT A.STUDENT_ID AS "studentId",
+		A.STUDENT_NO AS "studentNo",
+		A.KOREAN_NAME AS "koreanName",
+		A.GERMAN_NAME AS "germanName",
+		A.ENTRANCE_DAY AS "entranceDay",
+		A.BIRTHDAY AS "birthday",
+		A.GENDER AS "gender",
+		A.STUDENT_STATUS AS "studentStatus",
+		A.STUDENT_STATUS_NAME AS "studentStatusName",
+		A.PLZ AS "plz",
+		A.ADDRESS_CITY AS "addressCity",
+		A.ADDRESS_DTL AS "addressDtl",
+		A.FATHER_NAME AS "fatherName",
+		A.MOTHER_NAME AS "motherName",
+		A.FATHER_NAME_ENG AS "fatherNameEng",
+		A.MOTHER_NAME_ENG AS "motherNameEng",
+		A.ADMISSION_FEE AS "admissionFee",
+		MAX(CASE WHEN A.SCHOOLFEE_TYPE = 'RE' THEN A.REDUCTION_TYPE ELSE NULL END) AS "reductionType",
+		MAX(CASE WHEN A.SCHOOLFEE_TYPE = 'RE' THEN A.REDUCTION_TYPE_NAME ELSE NULL END) AS "reductionTypeName",
+		MAX(CASE WHEN A.SCHOOLFEE_TYPE = 'RE' THEN A.SEMESTER_ID ELSE NULL END) AS "semesterId",
+		MAX(CASE WHEN A.SCHOOLFEE_TYPE = 'RE' THEN A.SEMESTER_NAME ELSE NULL END) AS "semesterName",
+		MAX(CASE WHEN A.SCHOOLFEE_TYPE = 'RE' THEN A.DEPARTMENT ELSE NULL END) AS "department",
+		MAX(CASE WHEN A.SCHOOLFEE_TYPE = 'RE' THEN A.DEPARTMENT_NAME ELSE NULL END) AS "departmentName",
+		MAX(CASE WHEN A.SCHOOLFEE_TYPE = 'RE' THEN A.CLASS_NAME ELSE NULL END) AS "className",
+		MAX(CASE WHEN A.SCHOOLFEE_TYPE = 'RE' THEN A.GRADE ELSE NULL END) AS "grade",
+		MAX(CASE WHEN A.SCHOOLFEE_TYPE = 'RE' THEN A.GRADE_NAME ELSE NULL END) AS "gradeName",
+		MAX(CASE WHEN A.SCHOOLFEE_TYPE = 'RE' THEN A.CLASS_NO ELSE NULL END) AS "classNo",
+		MAX(CASE WHEN A.SCHOOLFEE_TYPE = 'RE' THEN A.TEACHER_NAME ELSE NULL END) AS "teacherName",
+		COUNT(*) AS "courseCount",
+		CAST(SUM(FEE_MONTHS) AS UNSIGNED) AS "feeMonths",
+		CAST(SUM(FEE) AS CHAR) AS "fee",
+		CAST(SUM(PAY_MONTHS) AS UNSIGNED) AS "payMonths",
+		CAST(SUM(IFNULL(PAY,0)) AS CHAR) AS "pay",
+		CAST(SUM(IFNULL(FEE - PAY,0)) AS CHAR) AS "balance",
+
+		CAST(SUM(FEE1) AS CHAR) AS "fee1",
+		CAST(SUM(IFNULL(PAY1,0)) AS CHAR) AS "pay1",
+		CAST(SUM(IFNULL(FEE1,0) - IFNULL(PAY1,0)) AS CHAR) AS "balance1",
+
+		CAST(SUM(FEE2) AS CHAR) AS "fee2",
+		CAST(SUM(IFNULL(PAY2,0)) AS CHAR) AS "pay2",
+		CAST(SUM(IFNULL(FEE2,0) - IFNULL(PAY2,0)) AS CHAR) AS "balance2"
+	FROM (
+ 		 SELECT A.STUDENT_ID,
+				A.STUDENT_NO,
+				A.KOREAN_NAME,
+				A.GERMAN_NAME,
+				A.ENTRANCE_DAY,
+				A.BIRTHDAY,
+				A.GENDER,
+				G.STUDENT_STATUS,
+				C1.CODE_NAME AS STUDENT_STATUS_NAME,
+				A.PLZ,
+				A.ADDRESS_CITY,
+				A.ADDRESS_DTL,
+				F.FATHER_NAME,
+				F.FATHER_NAME_ENG,
+				F.MOTHER_NAME,
+				F.MOTHER_NAME_ENG,
+				A.ADMISSION_FEE,
+				B.REDUCTION_TYPE,
+				C2.CODE_NAME AS REDUCTION_TYPE_NAME,
+				C.SEMESTER_ID,
+				D.SEMESTER_NAME,
+				C.DEPARTMENT,
+				C4.CODE_NAME AS DEPARTMENT_NAME,
+				C.CLASS_NAME,
+				C.GRADE,
+				C5.CODE_NAME AS GRADE_NAME,
+				C.CLASS_NO,
+				C.SCHOOLFEE_TYPE,
+				C.CLASS_ID,		
+				E.TEACHER_NAME,
+				(SELECT SUM(CASE WHEN C.SCHOOLFEE_TYPE = 'RE' AND B.REDUCTION_TYPE = 'NA' THEN REGULAR_SCHOOL_FEE
+								WHEN C.SCHOOLFEE_TYPE = 'E1' AND B.REDUCTION_TYPE = 'NA' THEN EXTRA_SCHOOL_FEE1
+								WHEN C.SCHOOLFEE_TYPE = 'E2' AND B.REDUCTION_TYPE = 'NA' THEN EXTRA_SCHOOL_FEE2
+								WHEN C.SCHOOLFEE_TYPE = 'RE' AND B.REDUCTION_TYPE = 'MC' THEN REGULAR_SCHOOL_FEE_DISCOUNT
+								WHEN C.SCHOOLFEE_TYPE = 'E1' AND B.REDUCTION_TYPE = 'MC' THEN EXTRA_SCHOOL_FEE1_DISCOUNT
+								WHEN C.SCHOOLFEE_TYPE = 'E2' AND B.REDUCTION_TYPE = 'MC' THEN EXTRA_SCHOOL_FEE2_DISCOUNT
+								ELSE 0 END)
+				FROM SCHOOL_FEE X
+				WHERE X.APPLY_YEAR = '${req.query.applyYear}' 		
+				AND CAST(X.APPLY_MONTH AS UNSIGNED) >= (CASE WHEN DATE(A.ENTRANCE_DAY) <= DATE('${req.query.today}') THEN 1
+															ELSE CAST(MONTH(A.ENTRANCE_DAY) AS UNSIGNED)
+														END)		
+				AND CAST(X.APPLY_MONTH AS UNSIGNED) <= MONTH(NOW()) ) AS FEE,
+
+				(SELECT COUNT(CASE WHEN C.SCHOOLFEE_TYPE = 'RE' AND B.REDUCTION_TYPE = 'NA' THEN REGULAR_SCHOOL_FEE
+								WHEN C.SCHOOLFEE_TYPE = 'E1' AND B.REDUCTION_TYPE = 'NA' THEN EXTRA_SCHOOL_FEE1
+								WHEN C.SCHOOLFEE_TYPE = 'E2' AND B.REDUCTION_TYPE = 'NA' THEN EXTRA_SCHOOL_FEE2
+								WHEN C.SCHOOLFEE_TYPE = 'RE' AND B.REDUCTION_TYPE = 'MC' THEN REGULAR_SCHOOL_FEE_DISCOUNT
+								WHEN C.SCHOOLFEE_TYPE = 'E1' AND B.REDUCTION_TYPE = 'MC' THEN EXTRA_SCHOOL_FEE1_DISCOUNT
+								WHEN C.SCHOOLFEE_TYPE = 'E2' AND B.REDUCTION_TYPE = 'MC' THEN EXTRA_SCHOOL_FEE2_DISCOUNT
+								ELSE 0 END)
+				FROM SCHOOL_FEE X
+				WHERE X.APPLY_YEAR = '${req.query.applyYear}' 
+				
+				AND CAST(X.APPLY_MONTH AS UNSIGNED) >=  (CASE WHEN DATE(A.ENTRANCE_DAY) <= DATE('${req.query.today}') THEN 1
+															ELSE CAST(MONTH(A.ENTRANCE_DAY)  AS UNSIGNED)
+														END)		
+				AND CAST(X.APPLY_MONTH AS UNSIGNED) <= MONTH(NOW()) ) AS FEE_MONTHS,
+		
+				(SELECT SUM(X.SCHOOL_FEE)
+			       FROM PAYMENT X
+			      WHERE X.PAYMENT_YEAR = '${req.query.applyYear}' 
+				    AND CAST(X.PAYMENT_MONTH AS UNSIGNED) <= MONTH(NOW())
+				    AND X.STUDENT_ID = A.STUDENT_ID
+				    AND X.SCHOOL_FEE_TYPE = C.SCHOOLFEE_TYPE) AS PAY,
+				
+				(SELECT COUNT(X.SCHOOL_FEE)
+			       FROM PAYMENT X
+			      WHERE X.PAYMENT_YEAR = '${req.query.applyYear}' 
+				    AND CAST(X.PAYMENT_MONTH AS UNSIGNED) <= MONTH(NOW())
+				    AND X.STUDENT_ID = A.STUDENT_ID
+				    AND X.SCHOOL_FEE_TYPE = C.SCHOOLFEE_TYPE) AS PAY_MONTHS,                                    
+
+					(SELECT SUM(CASE WHEN C.SCHOOLFEE_TYPE = 'RE' AND B.REDUCTION_TYPE = 'NA' THEN REGULAR_SCHOOL_FEE
+									 WHEN C.SCHOOLFEE_TYPE = 'RE' AND B.REDUCTION_TYPE = 'MC' THEN REGULAR_SCHOOL_FEE_DISCOUNT
+									 ELSE 0 END)
+					   FROM SCHOOL_FEE X
+					  WHERE X.APPLY_YEAR = '${req.query.applyYear}'
+						AND CAST(X.APPLY_MONTH AS UNSIGNED) >= (CASE WHEN DATE(A.ENTRANCE_DAY) <= DATE('${req.query.today}') THEN 1
+																 ELSE CAST(MONTH(A.ENTRANCE_DAY) AS UNSIGNED)
+															END)
+						AND CAST(X.APPLY_MONTH AS UNSIGNED) <= MONTH(NOW()) ) AS FEE1,                               
+
+
+					(SELECT SUM(CASE WHEN X.SCHOOL_FEE_TYPE = 'RE' THEN X.SCHOOL_FEE ELSE 0 END)
+				   FROM PAYMENT X
+				  WHERE X.PAYMENT_YEAR = '${req.query.applyYear}'
+						AND CAST(X.PAYMENT_MONTH AS UNSIGNED) <= MONTH(NOW())
+						AND X.STUDENT_ID = A.STUDENT_ID
+						AND X.SCHOOL_FEE_TYPE = C.SCHOOLFEE_TYPE) AS PAY1,                                    
+
+					(SELECT SUM(CASE   WHEN C.SCHOOLFEE_TYPE = 'E1' AND B.REDUCTION_TYPE = 'NA' THEN EXTRA_SCHOOL_FEE1
+									   WHEN C.SCHOOLFEE_TYPE = 'E2' AND B.REDUCTION_TYPE = 'NA' THEN EXTRA_SCHOOL_FEE2
+									  WHEN C.SCHOOLFEE_TYPE = 'E1' AND B.REDUCTION_TYPE = 'MC' THEN EXTRA_SCHOOL_FEE1_DISCOUNT
+									   WHEN C.SCHOOLFEE_TYPE = 'E2' AND B.REDUCTION_TYPE = 'MC' THEN EXTRA_SCHOOL_FEE2_DISCOUNT
+									   ELSE 0 END)
+					   FROM SCHOOL_FEE X
+					  WHERE X.APPLY_YEAR = '${req.query.applyYear}'
+						AND CAST(X.APPLY_MONTH AS UNSIGNED) >= (CASE WHEN DATE(A.ENTRANCE_DAY) <= DATE('${req.query.today}') THEN 1
+																 ELSE CAST(MONTH(A.ENTRANCE_DAY) AS UNSIGNED)
+															END)
+						AND CAST(X.APPLY_MONTH AS UNSIGNED) <= MONTH(NOW()) ) AS FEE2,                               
+
+
+					(SELECT SUM(CASE WHEN X.SCHOOL_FEE_TYPE != 'RE' THEN X.SCHOOL_FEE ELSE 0 END)
+				   FROM PAYMENT X
+				  WHERE X.PAYMENT_YEAR = '${req.query.applyYear}'
+						AND CAST(X.PAYMENT_MONTH AS UNSIGNED) <= MONTH(NOW())
+						AND X.STUDENT_ID = A.STUDENT_ID
+						AND X.SCHOOL_FEE_TYPE = C.SCHOOLFEE_TYPE) AS PAY2
+	
+		FROM STUDENT_BASIC_INFO A
+		LEFT OUTER JOIN CLASSINFO_STUDENTS B ON A.STUDENT_ID = B.STUDENT_ID
+		LEFT OUTER JOIN CLASS_INFO C ON B.CLASS_ID = C.CLASS_ID
+		LEFT OUTER JOIN SEMESTER D ON D.SEMESTER_ID = C.SEMESTER_ID
+		LEFT OUTER JOIN TEACHER E ON C.TEACHER_ID = E.TEACHER_ID
+		LEFT OUTER JOIN STUDENT_FAMILY F ON A.STUDENT_ID = F.STUDENT_ID
+		LEFT OUTER JOIN STUDENT_HISTORY G ON A.STUDENT_ID = G.STUDENT_ID AND A.LAST_HISTORY_SEQ = G.HISTORY_SEQ
+
+		LEFT OUTER JOIN COMMON_CODE C1 ON C1.SUPER_CODE = 'STUDENT_STATUS' AND C1.CODE = G.STUDENT_STATUS
+		LEFT OUTER JOIN COMMON_CODE C2 ON C2.SUPER_CODE = 'REDUCTION_TYPE' AND C2.CODE = B.REDUCTION_TYPE
+		LEFT OUTER JOIN COMMON_CODE C4 ON C4.SUPER_CODE = 'DEPARTMENT' AND C4.CODE = C.DEPARTMENT
+		LEFT OUTER JOIN COMMON_CODE C5 ON C5.SUPER_CODE = 'GRADE' AND C5.CODE = C.GRADE
+		WHERE 1=1
+		`;
+	  
+		if(!!req.query.teacherId) {
+			sql += "\n" + `AND C.TEACHER_ID = '${req.query.teacherId}'`; 
+		}
+		if(!!req.query.studentNo) {
+			sql += "\n" + `AND A.STUDENT_NO = '${req.query.studentNo}'`; 
+		}
+		if(!!req.query.grade) {
+			sql += "\n" + `AND C.GRADE = '${req.query.grade}'`; 
+		}
+		if(!!req.query.studentName) {
+			sql += "\n" + `AND A.KOREAN_NAME LIKE '${req.query.studentName}%'`; 
+		}
+		if(!!req.query.classNo) {
+			sql += "\n" + `AND C.CLASS_NO = '${req.query.classNo}'`; 
+		}
+		if(!!req.query.department) {
+			sql += "\n" + `AND C.DEPARTMENT = '${req.query.department}'`; 
+		}
+		if(!!req.query.semesterId) {
+			sql += "\n" + `AND C.SEMESTER_ID = '${req.query.semesterId}'`; 
+		}
+	
+		sql += ` 
+	) A
+	GROUP BY A.STUDENT_ID,
+	         A.STUDENT_NO,
+	         A.KOREAN_NAME,
+			 A.GERMAN_NAME,
+	         A.ENTRANCE_DAY,
+			 A.BIRTHDAY,
+			 A.GENDER,
+   	         A.STUDENT_STATUS,
+	         A.STUDENT_STATUS_NAME,                 
+			 A.PLZ,
+			 A.ADDRESS_CITY,
+			 A.ADDRESS_DTL,
+			 A.FATHER_NAME,			 
+			 A.FATHER_NAME_ENG,
+			 A.MOTHER_NAME,
+			 A.MOTHER_NAME_ENG,
+			 A.ADMISSION_FEE
+	`;
+	
+    connection.query(sql,
+        (err, rows, fields) => {
+			if(err){
+                Log.error(`/api/document/paycondition/list failed. sql=${sql}, error=${err}`);
+                res.send({"payments": []});
+			}else{             
+                let payments = [];
+                for(let i=0; i < rows.length; i++){
+                    payments.push(rows[i]);
+                }
+				Log.print(`/api/document/paycondition/list called  sql=${sql}`);
+                res.send({"payments": payments});
+			}
+        }
+    );
+}
+
+module.exports = {
+    payconditionList //수업료 납부현황
+}

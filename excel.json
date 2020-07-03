@@ -1,0 +1,70 @@
+{
+    "addressDir" : "주소록\\",
+    "address" : "주소록.xlsx",
+    "addressExt" : ".xlsx",
+
+    "classbookDir" : "출석부\\",
+    "classbook" : "출석부.xlsx",
+    "classbookExt" : ".xlsx",
+    
+    "allstudentsDir" : "전체학생\\",
+    "allstudents" : "전체학생.xlsx",
+    "allstudentsExt" : ".xlsx",
+
+    
+    "defaulterDir" : "미납자명단\\",
+    "defaulter" : "미납자명단.xlsx",
+    "defaulterExt" : ".xlsx",
+    
+    "representDir" : "학부모대표\\",
+    "represent" : "학부모대표.xlsx",
+    "representExt" : ".xlsx",
+
+    "emergencyDir" : "교사비상연락망\\",
+    "emergency" : "교사비상연락망.xlsx",
+    "emergencyExt" : ".xlsx",
+
+    "paymentDir" : "납입증명서\\",
+    "payment" : "납입증명서.xlsx",
+    "paymentExt" : ".xlsx",
+    
+    "contributionDir" : "기부금영수증\\",
+    "contribution" : "기부금영수증.xlsx",
+    "contributionExt" : ".xlsx",    
+    
+    "enrollmentDir" : "재학증명서\\",
+    "enrollment" : "재학증명서.xlsx",
+    "enrollmentExt" : ".xlsx",
+    
+    "entranceDir" : "입학통지서\\",
+    "entrance" : "입학통지서.xlsx",
+    "entranceExt" : ".xlsx",
+    
+    "attendanceDir" : "개근상장\\",
+    "attendance" : "개근상장.xlsx",
+    "attendanceExt" : ".xlsx",
+    
+    "regularDir" : "정근상장\\",
+    "regular" : "정근상장.xlsx",
+    "regularExt" : ".xlsx",
+    
+    "graduateDir" : "졸업장\\",
+    "graduate" : "졸업장.xlsx",
+    "graduateExt" : ".xlsx",
+    
+    "prizeDir" : "상장\\",
+    "prize" : "상장.xlsx",
+    "prizeExt" : ".xlsx",
+    
+    "employmentDir" : "재직증명서\\",
+    "employment" : "재직증명서.xlsx",
+    "employmentExt" : ".xlsx",
+    
+    "employmentKrDir" : "재직증명서_한글\\",
+    "employmentKr" : "재직증명서_한글.xlsx", 
+    "employmentKrExt" : ".xlsx",
+
+    "excelDir": "D:\\출력된문서\\",
+    "templateDir": "D:\\출력된문서\\템플릿_삭제금지\\"
+    
+}
