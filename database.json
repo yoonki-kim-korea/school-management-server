@@ -1,5 +1,5 @@
 {
-    "host" : "frankfurt.cycoaoiwg3be.eu-central-1.rds.amazonaws.com",
+    "host" : "127.0.0.1",
     "user" : "root", 
     "password" : "cnsh2010",
     "port" : "3306",
