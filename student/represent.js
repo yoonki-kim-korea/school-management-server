@@ -1,6 +1,5 @@
 const Log = require('../utils/debug.js');
 
-
 /**
  * 학부모대표 목록
  */
