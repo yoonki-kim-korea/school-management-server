@@ -129,6 +129,9 @@ candidateList = (req, res, connection) => {
             C.MOTHER_NAME AS "motherName"
             
         FROM STUDENT_BASIC_INFO A
+
+        LEFT OUTER JOIN STUDENT_HISTORY G
+        ON A.STUDENT_ID = G.STUDENT_ID AND A.LAST_HISTORY_SEQ = G.HISTORY_SEQ
         
         INNER JOIN STUDENT_FAMILY C
         ON A.STUDENT_ID = C.STUDENT_ID
@@ -153,8 +156,9 @@ candidateList = (req, res, connection) => {
                         ON B.CLASS_STATUS = E.CODE
                         AND E.SUPER_CODE = 'CLASS_STATUS') B
         ON A.STUDENT_ID = B.STUDENT_ID
-                WHERE 1=1
-
+       
+        WHERE 1=1        
+        AND G.STUDENT_STATUS = 'STD'
         AND A.USE_YN = 'Y' 
         AND A.STUDENT_ID NOT IN (SELECT D.STUDENT_ID FROM CLASSINFO_STUDENTS D WHERE D.CLASS_ID = ${req.query.classId})     
     `;
